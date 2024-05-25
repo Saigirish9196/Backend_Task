@@ -49,13 +49,13 @@ const Profile = () => {
             className="border p-3 rounded-lg"
             onChange={handleChange}
           />
-          <input
+          {/* <input
             type="password"
             placeholder="password"
             onChange={handleChange}
             id="password"
             className="border p-3 rounded-lg"
-          />
+          /> */}
           <button
             disabled={loading}
             className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80"
