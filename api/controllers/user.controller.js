@@ -8,28 +8,39 @@ export const test = (req, res) => {
 
 //update email & username
 export const updateProfile = async (req, res) => {
-  console.log(req.body);
 
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      {_id:req.user._id},
-      {
-        $set: {
-          username: req.body.username,
-          email: req.body.email,
-          avatar: req.body.avatar,
-        },
-      },
-      { new: true }
-    );
+    
+    const user = await User.findById(req.user._id);
 
-    const { password, ...rest } = updatedUser._doc;
+    // Update user details
+    user.username = req.body.username || user.username;
+    user.email = req.body.email || user.email;
+    user.avatar = req.body.avatar || user.avatar;
 
-    res.status(200).json(rest);
+    // If a new password is provided, set it
+    if (req.body.password) {
+      user.setPassword(req.body.password, async (err, updatedUser) => {
+        if (err) {
+          return res.status(400).json({
+            error: errorHandler(err)
+          });
+        }
+        // Save the updated user details
+        await updatedUser.save();
+        const { password, salt, hash, ...rest } = updatedUser._doc;
+        res.status(200).json({ user: rest });
+      });
+    } else {
+      // Save the updated user details without changing the password
+      await user.save();
+      const { password, salt, hash, ...rest } = user._doc;
+      res.status(200).json({ user: rest });
+    }
   } catch (error) {
     return res.status(400).json({
       error: errorHandler(error)
-  });
+    });
   }
 };
 
@@ -51,7 +62,7 @@ export const deleteUser = async (req, res) => {
  try {
     await User.findByIdAndDelete(req.user._id);
     res.clearCookie('access_token');
-    res.status(200).json('User has been deleted!');
+    res.status(200).json({message :'User has been deleted!'});
   } catch (error) {
     errorHandler(error);
   }

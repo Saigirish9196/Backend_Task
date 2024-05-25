@@ -1,16 +1,94 @@
 import React, { useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import {
+  deleteUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  signOutUserFailure,
+  signOutUserStart,
+  signOutUserSuccess,
+  updateUserFailure,
+  updateUserStart,
+  updateUserSuccess,
+} from "../redux/user/userSlice";
+
 
 const Profile = () => {
   const [formData, setFormData] = useState({});
+  const dispatch = useDispatch();
   const fileRef = useRef(null);
   const [file, setFile] = useState(undefined);
-
   console.log(file);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart())
+      console.log(formData);
+      const res = await fetch('/api/user/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data.error) {
+        dispatch(updateUserFailure(data.error))
+        return;
+      }
+      dispatch(updateUserSuccess(data.user))
+    } catch (error) {
+      dispatch(updateUserFailure(error))
+    }
+  };
 
+  const handleSignOut = async () => {
+    try {
+      dispatch(signOutUserStart())
+      const res = await fetch('/api/auth/signOut',{
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          credentials: 'include',
+        },
+      });
+      const data = await res.json();
+      if(data.error){
+        dispatch(updateUserFailure(data.error))
+        return;
+      }
+      dispatch(signOutUserSuccess(data.message))
+    } catch (error) {
+      dispatch(signOutUserFailure(error))
+    }
 
+  }
+
+  const handleDelete = async () => {
+    try {
+      dispatch(deleteUserStart())
+      const res = await fetch('/api/user/delete',{
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          credentials: 'include',
+        },
+      });
+      const data = await res.json();
+      if(data.error){
+        dispatch(deleteUserFailure(data.error))
+        return;
+      }
+      dispatch(deleteUserSuccess(data.message))
+    } catch (error) {
+      dispatch(deleteUserFailure(error))
+    }
+  }
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -19,14 +97,14 @@ const Profile = () => {
     <div className="flex justify-center ">
       <div className="p-3  w-96">
         <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
-        <form className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
-          onChange={(e) => setFile(e.target.files[0])}
-          type='file'
-          ref={fileRef}
-          hidden
-          accept='image/*'
-        />
+            onChange={(e) => setFile(e.target.files[0])}
+            type="file"
+            ref={fileRef}
+            hidden
+            accept="image/*"
+          />
           <img
             // onClick={() => fileRef.current.click()}
             src={currentUser.avatar}
@@ -49,13 +127,13 @@ const Profile = () => {
             className="border p-3 rounded-lg"
             onChange={handleChange}
           />
-          {/* <input
+          <input
             type="password"
             placeholder="password"
             onChange={handleChange}
             id="password"
             className="border p-3 rounded-lg"
-          /> */}
+          />
           <button
             disabled={loading}
             className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80"
@@ -70,10 +148,10 @@ const Profile = () => {
           </Link>
         </form>
         <div className="flex justify-between mt-5">
-          <span onClick="" className="text-red-700 cursor-pointer">
+          <span onClick={handleDelete} className="text-red-700 cursor-pointer">
             Delete account
           </span>
-          <span onClick="" className="text-red-700 cursor-pointer">
+          <span onClick={handleSignOut} className="text-red-700 cursor-pointer">
             Sign out
           </span>
         </div>

@@ -3,7 +3,7 @@ import { googleOAuth, signIn, signOut, signUp} from '../controllers/auth.control
 import passport from 'passport';
 import session from 'express-session';
 import User from '../models/user.model.js';
-import { runValidators, validatorMsgSignUp } from '../middlewares/require.js';
+import { requireAuth, runValidators, validatorMsgSignUp } from '../middlewares/require.js';
 
 const router = express.Router();
 router.use(session({
@@ -32,5 +32,5 @@ router.use(session({
 router.post('/sign-up',validatorMsgSignUp,runValidators , signUp);
 router.post('/sign-in', signIn);
 router.post("/google",googleOAuth)
-router.delete("/signOut",signOut)
+router.get("/signOut",requireAuth,signOut)
 export default router;
